@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>スマホ用・リアルタイム文字起こし</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#f5f5f5;color:#222;font-family:system-ui,-apple-system,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif}
+body{padding-bottom:env(safe-area-inset-bottom)}
+.wrap{max-width:900px;margin:0 auto;padding:14px}
+h1{font-size:22px;margin:0 0 12px}
+.bar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+button{min-height:50px;border:0;border-radius:10px;padding:10px 12px;font-size:17px;font-weight:600;background:#333;color:#fff;touch-action:manipulation}
+button:disabled{opacity:.45}
+.danger{background:#b33}.secondary{background:#666}
+#status{background:#fff;border:1px solid #ddd;border-radius:10px;padding:11px 12px;margin-bottom:10px;font-size:15px}
+#status.running{border-color:#2e7d32;color:#246c29} #status.error{border-color:#b71c1c;color:#a11}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+label{font-size:13px;color:#666}select{width:100%;font-size:16px;min-height:44px;padding:8px;border:1px solid #ccc;border-radius:8px;background:#fff}
+textarea{width:100%;min-height:60vh;resize:vertical;background:#fff;border:1px solid #999;border-radius:10px;padding:14px;font-size:19px;line-height:1.8;font-family:inherit;outline:none}
+textarea:focus{border-color:#666;box-shadow:0 0 0 2px rgba(0,0,0,.08)}
+#interim{min-height:32px;color:#777;font-size:17px;line-height:1.6;padding:7px 2px}
+.tip,.help{background:#fff;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:13px;line-height:1.65;border:1px solid #ddd}
+.tip{background:#fff7d6;border-color:#e1c65a}
+@media(min-width:700px){.wrap{padding:24px}h1{font-size:28px}.bar{display:flex;flex-wrap:wrap}.bar button{min-width:130px}textarea{min-height:460px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>リアルタイム文字起こし</h1>
+<div class="bar">
+  <button id="startBtn">▶ 開始</button>
+  <button id="stopBtn" class="danger" disabled>■ 停止</button>
+  <button id="clearBtn" class="secondary">消去</button>
+  <button id="saveBtn" class="secondary">TXT保存</button>
+</div>
+<div id="status">待機中</div>
+<div class="tip">スマホでは本文をタップして、その場で誤字を修正できます。修正中に新しい音声が認識されても、カーソル位置は勝手に移動しません。</div>
+<div class="grid">
+  <div><label for="lang">認識言語</label><select id="lang"><option value="ja-JP" selected>日本語</option><option value="en-US">English</option><option value="zh-CN">中文</option><option value="ko-KR">한국어</option></select></div>
+  <div><label>経過時間</label><div id="timer" style="background:#fff;border:1px solid #ccc;border-radius:8px;min-height:44px;padding:10px;font-size:16px">00:00:00</div></div>
+</div>
+<textarea id="finalText" spellcheck="false" placeholder="ここに文字起こし結果が表示されます。本文をタップして編集できます。"></textarea>
+<div id="interim"></div>
+<div class="help"><b>スマホでの利用について</b><br>AndroidはChrome、iPhoneはSafariでの利用を想定しています。ブラウザーの音声認識は対応状況や動作が端末・ブラウザーによって異なります。特にスマホでは連続認識が途中で終了することがあるため、この版は終了時に自動再開する仕組みを入れています。</div>
+<div class="help">このブラウザー版は、環境によっては音声認識のためにオンラインサービスを使用します。完全オフラインで使う版は別方式になります。</div>
+</div>
+<script>
+(()=>{
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const $=id=>document.getElementById(id);
+const startBtn=$('startBtn'),stopBtn=$('stopBtn'),clearBtn=$('clearBtn'),saveBtn=$('saveBtn');
+const finalEl=$('finalText'),interimEl=$('interim'),statusEl=$('status'),langEl=$('lang'),timerEl=$('timer');
+let recognition=null,running=false,manualStop=false,startedAt=0,timerId=null,restartTimer=null,sessionId=0,restartAttempts=0;
+function status(t,c=''){statusEl.textContent=t;statusEl.className=c}
+function show(){startBtn.disabled=running;stopBtn.disabled=!running}
+function clock(){if(!running)return;const s=Math.floor((Date.now()-startedAt)/1000),h=String(Math.floor(s/3600)).padStart(2,'0'),m=String(Math.floor(s%3600/60)).padStart(2,'0'),x=String(s%60).padStart(2,'0');timerEl.textContent=`${h}:${m}:${x}`}
+function cancelRestart(){if(restartTimer){clearTimeout(restartTimer);restartTimer=null}}
+function appendFinal(text){if(!text)return;const old=finalEl.value,start=finalEl.selectionStart,end=finalEl.selectionEnd,top=finalEl.scrollTop,left=finalEl.scrollLeft,focus=document.activeElement===finalEl,near=Math.abs(end-old.length)<=2;const prefix=old.length&&!/[\s　]$/.test(old)?' ':'';finalEl.value=old+prefix+text;if(focus){finalEl.setSelectionRange(start,end);finalEl.scrollTop=top;finalEl.scrollLeft=left}else if(near){finalEl.scrollTop=finalEl.scrollHeight}else finalEl.scrollTop=top}
+function schedule(reason,delay=800){if(!running||manualStop)return;cancelRestart();restartAttempts++;const wait=Math.min(delay*Math.min(restartAttempts,5),6000);status(`${reason}（自動で再開します）`,'running');restartTimer=setTimeout(()=>{restartTimer=null;startRecognition()},wait)}
+function makeRec(my){const r=new SR();r.lang=langEl.value;r.continuous=true;r.interimResults=true;r.maxAlternatives=1;
+r.onstart=()=>{if(my!==sessionId)return;restartAttempts=0;status('● 認識中… 話してください','running')};
+r.onresult=e=>{if(my!==sessionId)return;let interim='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)appendFinal(t);else interim+=t}interimEl.textContent=interim?'（認識中）'+interim:''};
+r.onerror=e=>{if(my!==sessionId)return;interimEl.textContent='';const x=e.error||'unknown';if(x==='not-allowed'||x==='service-not-allowed'){running=false;manualStop=true;clearInterval(timerId);cancelRestart();show();status('マイクの許可が必要です。ブラウザーの設定でマイクを許可してください。','error');return}if(x==='network')schedule('音声認識サービスへ再接続中…',1200);else if(x==='audio-capture')schedule('マイク接続を確認中…',1000);else schedule('音声認識を再開中…',700)};
+r.onend=()=>{if(my!==sessionId)return;interimEl.textContent='';if(running&&!manualStop)schedule('認識セッションが終了しました。再開中…',500)};return r}
+function startRecognition(){if(!running||manualStop||!SR)return;cancelRestart();const old=recognition;sessionId++;const my=sessionId;recognition=makeRec(my);try{if(old)old.abort()}catch(e){}try{recognition.start()}catch(e){schedule('認識開始を再試行中…',800)}}
+startBtn.onclick=()=>{if(!SR){status('このブラウザーは音声認識に対応していません。AndroidはChrome、iPhoneはSafariで試してください。','error');return}if(running)return;manualStop=false;running=true;startedAt=Date.now();restartAttempts=0;clearInterval(timerId);timerId=setInterval(clock,1000);clock();show();startRecognition()};
+stopBtn.onclick=()=>{manualStop=true;running=false;sessionId++;cancelRestart();clearInterval(timerId);const r=recognition;recognition=null;try{if(r)r.stop()}catch(e){}show();interimEl.textContent='';status('停止しました')};
+clearBtn.onclick=()=>{if(confirm('文字起こしした本文をすべて消去しますか？')){finalEl.value='';interimEl.textContent='';status(running?'● 認識中… 本文を消去しました':'本文を消去しました',running?'running':'')}};
+saveBtn.onclick=()=>{const text=finalEl.value.trim();if(!text){status('保存する文字がありません。','error');return}const d=new Date(),p=n=>String(n).padStart(2,'0'),name=`文字起こし_${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}_${p(d.getHours())}-${p(d.getMinutes())}-${p(d.getSeconds())}.txt`;const blob=new Blob([text+'\n'],{type:'text/plain;charset=utf-8'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);status('TXTを保存しました')};
+langEl.onchange=()=>{if(running){sessionId++;try{if(recognition)recognition.abort()}catch(e){}startRecognition()}};
+finalEl.addEventListener('focus',()=>{if(running)status('● 認識中… 本文を編集できます','running')});
+show();if(!SR)status('このブラウザーは音声認識APIに対応していません。AndroidはChrome、iPhoneはSafariで試してください。','error');
+})();
+</script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
+</body>
+</html>
