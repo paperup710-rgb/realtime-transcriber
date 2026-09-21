@@ -4,241 +4,71 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<link rel="manifest" href="./manifest.webmanifest">
-<title>リアルタイム文字起こし・安定版</title>
+<title>リアルタイム文字起こし・無線マイク版</title>
 <style>
-*{box-sizing:border-box}
-html,body{margin:0;padding:0;background:#f5f5f5;color:#222;font-family:system-ui,-apple-system,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif}
-body{padding-bottom:env(safe-area-inset-bottom)}
-.wrap{max-width:1050px;margin:0 auto;padding:14px}
-h1{font-size:23px;margin:0}
-.header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
-.badge{font-size:12px;color:#666}
-.mode{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-button{min-height:48px;border:0;border-radius:10px;padding:10px 14px;font-size:16px;font-weight:700;background:#333;color:#fff;touch-action:manipulation}
-button:disabled{opacity:.45}
-.good{background:#2e7d32}.secondary{background:#666}.danger{background:#a33}
-.card{background:#fff;border:1px solid #ddd;border-radius:12px;padding:14px;margin-bottom:10px}
-input,select{font-size:16px;min-height:44px;padding:8px 10px;border:1px solid #ccc;border-radius:8px;background:#fff}
-input{width:100%}
-.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-#status{background:#fff;border:1px solid #ddd;border-radius:10px;padding:11px 12px;margin-bottom:10px}
-#status.running{border-color:#2e7d32;color:#246c29}#status.error{border-color:#b71c1c;color:#a11}
-.code{font-size:28px;font-weight:800;letter-spacing:.12em;word-break:break-all;margin:8px 0}
-textarea{width:100%;min-height:58vh;resize:vertical;background:#fff;border:1px solid #999;border-radius:10px;padding:14px;font-size:20px;line-height:1.8;font-family:inherit;outline:none}
-textarea:focus{border-color:#555;box-shadow:0 0 0 2px rgba(0,0,0,.08)}
-#interim{min-height:34px;color:#777;font-size:17px;line-height:1.6;padding:7px 2px}
-.small{font-size:13px;color:#666;line-height:1.6}.tip{background:#fff7d6;border:1px solid #e1c65a;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:13px;line-height:1.6}
-.hidden{display:none!important}
-@media(min-width:700px){.wrap{padding:24px}h1{font-size:29px}textarea{min-height:560px}}
+*{box-sizing:border-box}html,body{margin:0;padding:0;background:#f5f5f5;color:#222;font-family:system-ui,-apple-system,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif}body{padding-bottom:env(safe-area-inset-bottom)}.wrap{max-width:1000px;margin:0 auto;padding:14px}h1{font-size:23px;margin:0 0 4px}.small{font-size:13px;color:#666}.mode{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.mode button{background:#666}.mode button.active{background:#222}.card{background:#fff;border:1px solid #ddd;border-radius:12px;padding:14px;margin-bottom:10px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}button{min-height:48px;border:0;border-radius:10px;padding:10px 14px;font-size:16px;font-weight:600;background:#333;color:#fff;touch-action:manipulation}button:disabled{opacity:.45}.good{background:#2e7d32}.danger{background:#b33}.secondary{background:#666}input,select{font-size:16px;min-height:44px;padding:8px 10px;border:1px solid #ccc;border-radius:8px;background:#fff}input{width:100%}.code{font-size:28px;font-weight:800;letter-spacing:.12em;word-break:break-all;margin:8px 0}#status{background:#fff;border:1px solid #ddd;border-radius:10px;padding:11px 12px;font-size:15px}.running{border-color:#2e7d32!important;color:#246c29}.error{border-color:#b71c1c!important;color:#a11}textarea{width:100%;min-height:62vh;resize:vertical;background:#fff;border:1px solid #999;border-radius:10px;padding:14px;font-size:20px;line-height:1.85;font-family:inherit;outline:none}textarea:focus{border-color:#666;box-shadow:0 0 0 2px rgba(0,0,0,.08)}#interim{min-height:30px;color:#777;font-size:17px;padding:7px 2px}.hidden{display:none!important}.tip,.help{background:#fff;border:1px solid #ddd;border-radius:10px;padding:10px 12px;margin:10px 0;font-size:13px;line-height:1.65}.tip{background:#fff7d6;border-color:#e1c65a}.ok{color:#176b24}.warn{color:#8a5a00}@media(min-width:700px){.wrap{padding:24px}h1{font-size:29px}textarea{min-height:540px}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="header"><h1>リアルタイム文字起こし</h1><div class="badge">スマホ ⇄ PC・安定版</div></div>
-  <div class="mode">
-    <button id="phoneMode">📱 スマホ（文字起こし）</button>
-    <button id="pcMode">💻 PC（表示・編集）</button>
-  </div>
+  <h1>リアルタイム文字起こし</h1>
+  <div class="small">スマホ＝無線マイク　／　PC＝文字起こし・表示・編集</div>
+  <div class="mode"><button id="phoneMode">📱 スマホ（無線マイク）</button><button id="pcMode">💻 PC（文字起こし）</button></div>
   <div id="status">待機中</div>
 
   <section id="phonePanel" class="card">
-    <div class="row">
-      <button id="connectPhone" class="good">PCに接続</button>
-      <button id="disconnectPhone" class="secondary">接続解除</button>
-    </div>
-    <div style="margin-top:10px"><label for="hostCode">PCの接続コード</label><input id="hostCode" inputmode="text" autocomplete="off" placeholder="PCに表示されたコードを入力"></div>
-    <div class="small">PCで「接続待機」を開始するとコードが表示されます。</div>
+    <div class="small">① PCに表示された接続コードを入力</div>
+    <input id="pcCode" inputmode="text" autocomplete="off" placeholder="例：RT7H1M94B">
+    <div class="row" style="margin-top:8px"><button id="phoneConnect" class="good">PCに接続</button><button id="phoneDisconnect" class="secondary">接続解除</button></div>
     <hr>
-    <div class="row">
-      <button id="startBtn" class="good">▶ 開始</button>
-      <button id="stopBtn" class="danger" disabled>■ 停止</button>
-      <button id="clearBtn" class="secondary">消去</button>
-      <button id="saveBtn" class="secondary">TXT保存</button>
-    </div>
-    <div class="row" style="margin-top:10px">
-      <select id="lang"><option value="ja-JP" selected>日本語</option><option value="en-US">English</option><option value="zh-CN">中文</option><option value="ko-KR">한국어</option></select>
-      <div id="timer" style="background:#fff;border:1px solid #ccc;border-radius:8px;min-height:44px;padding:10px;font-size:16px">00:00:00</div>
-    </div>
-    <div class="small" style="margin-top:8px">同じ認識セッションをできるだけ長く使い、再接続の回数を減らします。ブラウザー自体が認識サービスを切断した場合だけ自動再開します。</div>
+    <div class="row"><button id="micStart" class="good" disabled>🎙 マイク開始</button><button id="micStop" class="danger" disabled>■ マイク停止</button></div>
+    <div class="small" style="margin-top:8px">この版ではスマホの音声認識は使いません。マイク音声を無線でPCへ送り、PC側の文字起こしエンジンで処理します。</div>
   </section>
 
   <section id="pcPanel" class="card hidden">
-    <div class="row">
-      <button id="hostBtn" class="good">接続待機を開始</button>
-      <button id="newCodeBtn" class="secondary">新しいコード</button>
-      <button id="copyCodeBtn" class="secondary">コードをコピー</button>
-    </div>
-    <div style="margin-top:10px">スマホ側でこのコードを入力してください。</div>
-    <div id="hostCodeView" class="code">—</div>
-    <div class="small">接続後はスマホの確定文字をPCへ順番に送ります。PCで本文を編集した内容はスマホにも反映します。</div>
+    <div class="row"><button id="hostStart" class="good">接続待機を開始</button><button id="newCode" class="secondary">新しいコード</button><button id="engineConnect" class="secondary">文字起こしエンジン接続</button></div>
+    <div class="small" style="margin-top:10px">PCでこのページを開き、下のコードをスマホへ入力します。</div>
+    <div id="hostCode" class="code">—</div>
+    <div class="row"><button id="copyCode" class="secondary">コードをコピー</button></div>
+    <div id="engineStatus" class="small" style="margin-top:8px">文字起こしエンジン：未接続</div>
   </section>
 
   <section class="card">
-    <textarea id="finalText" spellcheck="false" placeholder="ここに文字起こし結果が表示されます。PCでは編集できます。"></textarea>
+    <textarea id="text" spellcheck="false" placeholder="ここに文字起こし結果が表示されます。PCでは編集できます。"></textarea>
     <div id="interim"></div>
   </section>
 
-  <div class="tip"><b>今回の修正版</b><br>認識結果の重複送信を防ぐため、同じ発話の再送を無視します。PCへの同期も「全文を毎回送り直す」のではなく、確定文字は追加データとして送信し、PC編集時だけ全文同期します。</div>
+  <div class="tip"><b>今回の方式</b><br>スマホのマイクは一度だけ開始し、そのまま音声を無線でPCへ送ります。スマホ側のWeb Speech APIを使わないため、認識を何度も停止・再開することによる「ポコポコ音」と重複を避ける構成です。</div>
+  <div class="help"><b>PC側で必要なもの</b><br>PCでは最初に <code>start_server.bat</code> を1回起動します。初回だけ文字起こしモデルのダウンロードに時間がかかる場合があります。</div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
 <script>
 (()=>{
-'use strict';
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-const $=id=>document.getElementById(id);
-const phoneMode=$('phoneMode'),pcMode=$('pcMode'),phonePanel=$('phonePanel'),pcPanel=$('pcPanel'),statusEl=$('status');
-const finalEl=$('finalText'),interimEl=$('interim');
-const startBtn=$('startBtn'),stopBtn=$('stopBtn'),clearBtn=$('clearBtn'),saveBtn=$('saveBtn'),langEl=$('lang'),timerEl=$('timer');
-const connectPhone=$('connectPhone'),disconnectPhone=$('disconnectPhone'),hostCode=$('hostCode');
-const hostBtn=$('hostBtn'),newCodeBtn=$('newCodeBtn'),hostCodeView=$('hostCodeView'),copyCodeBtn=$('copyCodeBtn');
-let role=localStorage.getItem('rt-role')||((innerWidth<700)?'phone':'pc');
-let peer=null,conn=null,hostPeerCode='';
-let recognition=null,running=false,manualStop=false,timerId=null,restartTimer=null,restartAttempts=0,startedAt=0;
-let recognitionGeneration=0,lastFinalText='',recentFinals=[];
-let applyingRemote=false,editTimer=null,nextMessageId=0,seenMessageIds=new Set();
+const $=id=>document.getElementById(id);const phoneMode=$('phoneMode'),pcMode=$('pcMode'),phonePanel=$('phonePanel'),pcPanel=$('pcPanel');
+const statusEl=$('status'),textEl=$('text'),interimEl=$('interim');const pcCode=$('pcCode'),phoneConnect=$('phoneConnect'),phoneDisconnect=$('phoneDisconnect'),micStart=$('micStart'),micStop=$('micStop');
+const hostStart=$('hostStart'),newCode=$('newCode'),hostCode=$('hostCode'),copyCode=$('copyCode'),engineConnect=$('engineConnect'),engineStatus=$('engineStatus');
+let role=localStorage.getItem('rt-new-role')||((innerWidth<700)?'phone':'pc');let peer=null,pcConn=null,mediaCall=null,localStream=null,audioCtx=null,processor=null,zeroGain=null,ws=null,peerCode='';
+let transcriptStarted=false,broadcastTimer=null,applyingRemote=false,lastBroadcast='';
 const clientId=Math.random().toString(36).slice(2,10);
-
-function status(t,c=''){statusEl.textContent=t;statusEl.className=c}
-function setRole(r){role=r;localStorage.setItem('rt-role',r);phoneMode.classList.toggle('active',r==='phone');pcMode.classList.toggle('active',r==='pc');phonePanel.classList.toggle('hidden',r!=='phone');pcPanel.classList.toggle('hidden',r!=='pc');status(r==='phone'?'スマホモード':'PCモード')}
-function normalized(s){return String(s||'').replace(/[\s　、。,.!?！？]/g,'').toLowerCase()}
-function isLikelyDuplicate(text){
-  const n=normalized(text); if(!n||n.length<4)return false;
-  for(const p of recentFinals){
-    const pn=normalized(p);
-    if(n===pn)return true;
-    if(n.length>=10 && pn.length>=10 && (n.includes(pn)||pn.includes(n)) && Math.min(n.length,pn.length)/Math.max(n.length,pn.length)>0.72)return true;
-  }
-  return false;
-}
-function rememberFinal(text){recentFinals.push(text);if(recentFinals.length>12)recentFinals.shift()}
-function appendLocal(text){
-  if(!text)return;
-  if(isLikelyDuplicate(text))return;
-  rememberFinal(text); lastFinalText=text;
-  const old=finalEl.value;
-  const top=finalEl.scrollTop,left=finalEl.scrollLeft;
-  const focus=document.activeElement===finalEl;
-  const start=finalEl.selectionStart,end=finalEl.selectionEnd;
-  const prefix=old.length && !/[\s　]$/.test(old) ? ' ' : '';
-  finalEl.value=old+prefix+text;
-  if(focus){finalEl.setSelectionRange(start,end);finalEl.scrollTop=top;finalEl.scrollLeft=left}else finalEl.scrollTop=finalEl.scrollHeight;
-}
-function nextId(){nextMessageId++;return clientId+'-'+nextMessageId}
-function send(m){if(conn&&conn.open)conn.send(m)}
-function sendAppend(text){send({type:'append',id:nextId(),text:String(text)})}
-function sendSnapshot(){send({type:'snapshot',text:finalEl.value})}
-function queueSnapshot(){if(applyingRemote)return;clearTimeout(editTimer);editTimer=setTimeout(sendSnapshot,250)}
-function applySnapshot(text){
-  const t=String(text||'');
-  if(t===finalEl.value)return;
-  const focus=document.activeElement===finalEl,top=finalEl.scrollTop,left=finalEl.scrollLeft,pos=Math.min(finalEl.selectionStart||0,t.length);
-  applyingRemote=true;finalEl.value=t;applyingRemote=false;
-  if(focus)finalEl.setSelectionRange(pos,pos);else{finalEl.scrollTop=top;finalEl.scrollLeft=left}
-}
-function setupConn(c,isHost){
-  if(conn&&conn!==c){try{conn.close()}catch(e){}}
-  conn=c;seenMessageIds.clear();
-  status('接続中…','running');
-  c.on('open',()=>{status('● PCと接続済み','running');if(isHost)sendSnapshot();});
-  c.on('data',m=>{
-    if(!m||typeof m!=='object')return;
-    if(m.type==='append'){
-      if(!m.id||seenMessageIds.has(m.id))return;
-      seenMessageIds.add(m.id);appendLocal(String(m.text||''));
-    } else if(m.type==='snapshot') applySnapshot(m.text);
-  });
-  c.on('close',()=>{if(conn===c){conn=null;status('接続が切れました','error')}});
-  c.on('error',()=>{if(conn===c)status('接続エラーが発生しました。','error')});
-}
-function makePeer(id){
-  if(peer){try{peer.destroy()}catch(e){}peer=null}
-  const opts={host:'0.peerjs.com',port:443,path:'/',secure:true};
-  peer=id?new Peer(id,opts):new Peer(opts);
-  peer.on('error',e=>{if(e.type==='unavailable-id'){status('このコードは使用中です。新しいコードを作ります。','error');newHost()}else status('P2P接続エラー: '+(e.type||'unknown'),'error')});
-  return peer;
-}
-function randomCode(){return 'RT'+Math.random().toString(36).slice(2,10).toUpperCase()}
-function newHost(){
-  hostPeerCode=randomCode();hostCodeView.textContent=hostPeerCode;hostBtn.textContent='接続待機を再起動';
-  const p=makePeer(hostPeerCode);
-  p.on('open',id=>{hostPeerCode=id;hostCodeView.textContent=id;status('● PCの接続待機中（コードをスマホへ）','running')});
-  p.on('connection',c=>setupConn(c,true));
-}
-hostBtn.onclick=newHost;newCodeBtn.onclick=newHost;
-copyCodeBtn.onclick=async()=>{if(!hostPeerCode)return;try{await navigator.clipboard.writeText(hostPeerCode);status('接続コードをコピーしました')}catch(e){status('コードを長押ししてコピーしてください')}};
-connectPhone.onclick=()=>{
-  const code=hostCode.value.trim().toUpperCase();
-  if(!code){status('PCの接続コードを入力してください','error');return}
-  if(typeof Peer==='undefined'){status('通信ライブラリの読み込みに失敗しました。再読み込みしてください。','error');return}
-  if(peer){try{peer.destroy()}catch(e){}}
-  peer=new Peer(undefined,{host:'0.peerjs.com',port:443,path:'/',secure:true});
-  peer.on('open',()=>setupConn(peer.connect(code,{reliable:true}),false));
-  peer.on('error',e=>status('接続できませんでした: '+(e.type||'unknown'),'error'));
-};
-disconnectPhone.onclick=()=>{if(conn){try{conn.close()}catch(e){}}if(peer){try{peer.destroy()}catch(e){}peer=null}conn=null;status('接続を解除しました')};
-phoneMode.onclick=()=>setRole('phone');pcMode.onclick=()=>setRole('pc');
-
-function showButtons(){startBtn.disabled=running;stopBtn.disabled=!running}
-function clock(){if(!running)return;const s=Math.floor((Date.now()-startedAt)/1000);const h=String(Math.floor(s/3600)).padStart(2,'0'),m=String(Math.floor((s%3600)/60)).padStart(2,'0'),x=String(s%60).padStart(2,'0');timerEl.textContent=h+':'+m+':'+x}
-function cancelRestart(){if(restartTimer){clearTimeout(restartTimer);restartTimer=null}}
-function scheduleRestart(reason,delay=1800){
-  if(!running||manualStop||restartTimer)return;
-  restartAttempts++;
-  const wait=Math.min(Math.max(delay,1500)*Math.min(restartAttempts,3),6000);
-  status(reason+'（自動再開）','running');
-  restartTimer=setTimeout(()=>{restartTimer=null;tryStartRecognition()},wait);
-}
-function buildRecognition(){
-  const r=new SR();
-  r.continuous=true;r.interimResults=true;r.maxAlternatives=1;r.lang=langEl.value;
-  const gen=++recognitionGeneration;
-  r.onstart=()=>{if(gen!==recognitionGeneration)return;restartAttempts=0;status('● 認識中… 話してください','running')};
-  r.onresult=e=>{
-    if(gen!==recognitionGeneration||!running)return;
-    let interim='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      const t=e.results[i][0]?.transcript||'';
-      if(e.results[i].isFinal){const dup=isLikelyDuplicate(t);appendLocal(t);if(!dup)sendAppend(t)}else interim+=t;
-    }
-    interimEl.textContent=interim?'（認識中）'+interim:'';
-  };
-  r.onerror=e=>{
-    if(gen!==recognitionGeneration||!running)return;
-    interimEl.textContent='';
-    const x=e.error||'unknown';
-    if(x==='not-allowed'||x==='service-not-allowed'){running=false;manualStop=true;clearInterval(timerId);cancelRestart();showButtons();status('マイクの許可が必要です。','error');return}
-    if(x==='no-speech'){status('● 認識待機中…','running');return}
-    if(x==='network'){status('● 音声認識サービスを再接続します…','running');return}
-    if(x==='audio-capture'){status('● マイク接続を確認しています…','running');return}
-    status('● 音声認識を再開します…','running');
-  };
-  r.onend=()=>{if(gen!==recognitionGeneration)return;interimEl.textContent='';if(running&&!manualStop)scheduleRestart('認識サービスが切断されました。',1800)};
-  return r;
-}
-function tryStartRecognition(){
-  if(!running||manualStop||!SR)return;
-  cancelRestart();
-  if(!recognition)recognition=buildRecognition();
-  try{recognition.start()}catch(e){scheduleRestart('認識開始を再試行します。',2200)}
-}
-startBtn.onclick=()=>{
-  if(!SR){status('このブラウザーは音声認識に対応していません。AndroidはChromeで試してください。','error');return}
-  if(running)return;
-  manualStop=false;running=true;startedAt=Date.now();restartAttempts=0;recentFinals=[];lastFinalText='';clearInterval(timerId);timerId=setInterval(clock,1000);clock();showButtons();
-  if(recognition){try{recognition.stop()}catch(e){}recognition=null}
-  tryStartRecognition();
-};
-stopBtn.onclick=()=>{
-  manualStop=true;running=false;recognitionGeneration++;cancelRestart();clearInterval(timerId);const r=recognition;recognition=null;try{if(r)r.stop()}catch(e){}showButtons();interimEl.textContent='';status('停止しました')
-};
-clearBtn.onclick=()=>{if(confirm('文字起こしした本文をすべて消去しますか？')){finalEl.value='';interimEl.textContent='';recentFinals=[];lastFinalText='';sendSnapshot();status(running?'● 認識中… 本文を消去しました':'本文を消去しました',running?'running':'')}};
-saveBtn.onclick=()=>{const text=finalEl.value.trim();if(!text){status('保存する文字がありません。','error');return}const d=new Date(),p=n=>String(n).padStart(2,'0'),name='文字起こし_'+d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'_'+p(d.getHours())+'-'+p(d.getMinutes())+'-'+p(d.getSeconds())+'.txt';const blob=new Blob([text+'\n'],{type:'text/plain;charset=utf-8'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);status('TXTを保存しました')};
-langEl.onchange=()=>{if(running){const r=recognition;recognition=null;recognitionGeneration++;try{if(r)r.abort()}catch(e){}setTimeout(()=>{if(running&&!manualStop)tryStartRecognition()},700)}};
-finalEl.addEventListener('input',()=>{if(!applyingRemote)queueSnapshot()});
-showButtons();setRole(role);if(!SR)status('このブラウザーは音声認識APIに対応していません。AndroidはChromeで試してください。','error');
-if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+function status(t,c=''){statusEl.textContent=t;statusEl.className=c}function setRole(r){role=r;localStorage.setItem('rt-new-role',r);phoneMode.classList.toggle('active',r==='phone');pcMode.classList.toggle('active',r==='pc');phonePanel.classList.toggle('hidden',r!=='phone');pcPanel.classList.toggle('hidden',r!=='pc');if(r==='pc'){status('PCモード');}else status('スマホモード')}
+function randCode(){return 'RT'+Math.random().toString(36).slice(2,10).toUpperCase()}
+function makePeer(id){if(peer){try{peer.destroy()}catch(e){}}peer=id?new Peer(id,{host:'0.peerjs.com',port:443,path:'/',secure:true}):new Peer({host:'0.peerjs.com',port:443,path:'/',secure:true});peer.on('error',e=>status('P2Pエラー: '+(e.type||'unknown'),'error'));return peer}
+function host(){peerCode=randCode();hostCode.textContent=peerCode;const p=makePeer(peerCode);p.on('open',id=>{peerCode=id;hostCode.textContent=id;status('● スマホの接続待機中','running')});p.on('connection',c=>{pcConn=c;c.on('open',()=>{status('● スマホと接続済み','running');sendSnapshot()});c.on('data',m=>{if(m&&m.type==='text'&&!applyingRemote){applyRemote(m.text)}});c.on('close',()=>{status('スマホとのデータ接続が切れました','error')})});p.on('call',call=>{mediaCall=call;call.answer();call.on('stream',stream=>{status('● スマホのマイク受信中','running');startProcessingStream(stream)});call.on('close',()=>{stopProcessing();status('スマホの音声接続が切れました','error')})})}
+function sendSnapshot(){if(pcConn&&pcConn.open)pcConn.send({type:'text',text:textEl.value})}
+function applyRemote(t){applyingRemote=true;const pos=Math.min(textEl.selectionStart||0,t.length);textEl.value=t;try{textEl.setSelectionRange(pos,pos)}catch(e){}applyingRemote=false}
+function broadcast(){if(applyingRemote||!pcConn||!pcConn.open)return;clearTimeout(broadcastTimer);broadcastTimer=setTimeout(()=>pcConn.send({type:'text',text:textEl.value}),120)}
+async function connectPhone(){const code=pcCode.value.trim().toUpperCase();if(!code){status('PCの接続コードを入力してください','error');return}if(typeof Peer==='undefined'){status('通信ライブラリを読み込めませんでした','error');return}peer=makePeer();peer.on('open',()=>{pcConn=peer.connect(code,{reliable:true});pcConn.on('open',()=>{status('● PCへ接続済み','running');micStart.disabled=false;});pcConn.on('data',m=>{if(m&&m.type==='text')applyRemote(m.text)});pcConn.on('close',()=>{status('PCとの接続が切れました','error');micStart.disabled=true})});peer.on('call',()=>{});}
+async function startMic(){if(localStream)return;try{localStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}});mediaCall=peer.call(pcCode.value.trim().toUpperCase(),localStream,{metadata:{type:'phone-mic'}});mediaCall.on('close',stopMic);micStart.disabled=true;micStop.disabled=false;status('● 無線マイク送信中','running')}catch(e){status('マイクを開始できませんでした：'+(e.message||e),'error')}}
+function stopMic(){if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null}if(mediaCall){try{mediaCall.close()}catch(e){}mediaCall=null}micStart.disabled=!pcConn||!pcConn.open;micStop.disabled=true;status('マイク停止')}
+function disconnectPhone(){stopMic();if(pcConn){try{pcConn.close()}catch(e){}}if(peer){try{peer.destroy()}catch(e){}}pcConn=null;peer=null;status('接続解除しました');micStart.disabled=true}
+function connectEngine(){if(ws&&ws.readyState===1){status('文字起こしエンジン接続済み','running');return}ws=new WebSocket('ws://127.0.0.1:8765');ws.binaryType='arraybuffer';ws.onopen=()=>{engineStatus.textContent='文字起こしエンジン：接続済み';engineStatus.className='small ok';status('● PCの文字起こしエンジン接続済み','running')};ws.onmessage=e=>{try{const m=JSON.parse(e.data);if(m.type==='engine'){engineStatus.textContent='文字起こしエンジン：'+(m.state==='ready'?'準備完了':m.state==='starting'?'起動中':'エラー');if(m.message)engineStatus.textContent+='：'+m.message;return}if(m.type==='transcript'&&m.text){appendText(m.text)}}catch(_){}};ws.onerror=()=>{engineStatus.textContent='文字起こしエンジン：未接続（PCでstart_server.batを起動してください）';engineStatus.className='small error'};ws.onclose=()=>{engineStatus.textContent='文字起こしエンジン：切断';engineStatus.className='small error'} }
+function downsample(buffer,inRate,outRate){if(inRate===outRate)return buffer;const ratio=inRate/outRate,len=Math.round(buffer.length/ratio),out=new Float32Array(len);for(let i=0;i<len;i++){const pos=i*ratio,idx=Math.floor(pos),frac=pos-idx;const a=buffer[idx]||0,b=buffer[idx+1]||a;out[i]=a+(b-a)*frac}return out}
+function pcm16(f32){const b=new ArrayBuffer(f32.length*2),v=new DataView(b);for(let i=0;i<f32.length;i++){let x=Math.max(-1,Math.min(1,f32[i]));v.setInt16(i*2,x<0?x*32768:x*32767,true)}return b}
+function startProcessingStream(stream){if(audioCtx)try{audioCtx.close()}catch(e){}audioCtx=new (window.AudioContext||window.webkitAudioContext)();const src=audioCtx.createMediaStreamSource(stream);processor=audioCtx.createScriptProcessor(4096,1,1);zeroGain=audioCtx.createGain();zeroGain.gain.value=0;processor.onaudioprocess=e=>{if(!ws||ws.readyState!==1)return;const data=e.inputBuffer.getChannelData(0);const pcm=downsample(data,audioCtx.sampleRate,16000);ws.send(pcm16(pcm))};src.connect(processor);processor.connect(zeroGain);zeroGain.connect(audioCtx.destination);}
+function stopProcessing(){if(processor){processor.onaudioprocess=null;try{processor.disconnect()}catch(e){}}if(zeroGain){try{zeroGain.disconnect()}catch(e){}}processor=null;zeroGain=null;if(audioCtx){try{audioCtx.close()}catch(e){}audioCtx=null}}
+function appendText(t){const old=textEl.value;const add=t.trim();if(!add)return;textEl.value=old+(old&&!/[\s　]$/.test(old)?' ':'')+add;textEl.scrollTop=textEl.scrollHeight;broadcast()}
+phoneMode.onclick=()=>setRole('phone');pcMode.onclick=()=>setRole('pc');hostStart.onclick=()=>host();newCode.onclick=()=>host();copyCode.onclick=async()=>{if(!peerCode)return;try{await navigator.clipboard.writeText(peerCode);status('コードをコピーしました')}catch(e){status('コードを長押ししてコピーしてください')}};phoneConnect.onclick=connectPhone;phoneDisconnect.onclick=disconnectPhone;micStart.onclick=startMic;micStop.onclick=stopMic;engineConnect.onclick=connectEngine;textEl.addEventListener('input',broadcast);
+setRole(role);if(role==='pc'){host();setTimeout(connectEngine,200)}
 })();
 </script>
 </body>
