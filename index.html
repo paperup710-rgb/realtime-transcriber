@@ -53,12 +53,12 @@ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const $=id=>document.getElementById(id);
 const startBtn=$('startBtn'),stopBtn=$('stopBtn'),clearBtn=$('clearBtn'),saveBtn=$('saveBtn');
 const finalEl=$('finalText'),interimEl=$('interim'),statusEl=$('status'),langEl=$('lang'),timerEl=$('timer');
-let recognition=null,running=false,manualStop=false,startedAt=0,timerId=null,restartTimer=null,sessionId=0,restartAttempts=0;
+let recognition=null,running=false,manualStop=false,startedAt=0,timerId=null,restartTimer=null,sessionId=0,restartAttempts=0,lastFinalText='';
 function status(t,c=''){statusEl.textContent=t;statusEl.className=c}
 function show(){startBtn.disabled=running;stopBtn.disabled=!running}
 function clock(){if(!running)return;const s=Math.floor((Date.now()-startedAt)/1000),h=String(Math.floor(s/3600)).padStart(2,'0'),m=String(Math.floor(s%3600/60)).padStart(2,'0'),x=String(s%60).padStart(2,'0');timerEl.textContent=`${h}:${m}:${x}`}
 function cancelRestart(){if(restartTimer){clearTimeout(restartTimer);restartTimer=null}}
-function appendFinal(text){if(!text)return;const old=finalEl.value,start=finalEl.selectionStart,end=finalEl.selectionEnd,top=finalEl.scrollTop,left=finalEl.scrollLeft,focus=document.activeElement===finalEl,near=Math.abs(end-old.length)<=2;const prefix=old.length&&!/[\s　]$/.test(old)?' ':'';finalEl.value=old+prefix+text;if(focus){finalEl.setSelectionRange(start,end);finalEl.scrollTop=top;finalEl.scrollLeft=left}else if(near){finalEl.scrollTop=finalEl.scrollHeight}else finalEl.scrollTop=top}
+function appendFinal(text){if(!text)return;text=text.trim();if(!text)return;if(text===lastFinalText)return;lastFinalText=text;const old=finalEl.value,start=finalEl.selectionStart,end=finalEl.selectionEnd,top=finalEl.scrollTop,left=finalEl.scrollLeft,focus=document.activeElement===finalEl,near=Math.abs(end-old.length)<=2;const prefix=old.length&&!/[\s　]$/.test(old)?' ':'';finalEl.value=old+prefix+text;if(focus){finalEl.setSelectionRange(start,end);finalEl.scrollTop=top;finalEl.scrollLeft=left}else if(near){finalEl.scrollTop=finalEl.scrollHeight}else finalEl.scrollTop=top}
 function schedule(reason,delay=800){if(!running||manualStop)return;cancelRestart();restartAttempts++;const wait=Math.min(delay*Math.min(restartAttempts,5),6000);status(`${reason}（自動で再開します）`,'running');restartTimer=setTimeout(()=>{restartTimer=null;startRecognition()},wait)}
 function makeRec(my){const r=new SR();r.lang=langEl.value;r.continuous=true;r.interimResults=true;r.maxAlternatives=1;
 r.onstart=()=>{if(my!==sessionId)return;restartAttempts=0;status('● 認識中… 話してください','running')};
@@ -68,7 +68,7 @@ r.onend=()=>{if(my!==sessionId)return;interimEl.textContent='';if(running&&!manu
 function startRecognition(){if(!running||manualStop||!SR)return;cancelRestart();const old=recognition;sessionId++;const my=sessionId;recognition=makeRec(my);try{if(old)old.abort()}catch(e){}try{recognition.start()}catch(e){schedule('認識開始を再試行中…',800)}}
 startBtn.onclick=()=>{if(!SR){status('このブラウザーは音声認識に対応していません。AndroidはChrome、iPhoneはSafariで試してください。','error');return}if(running)return;manualStop=false;running=true;startedAt=Date.now();restartAttempts=0;clearInterval(timerId);timerId=setInterval(clock,1000);clock();show();startRecognition()};
 stopBtn.onclick=()=>{manualStop=true;running=false;sessionId++;cancelRestart();clearInterval(timerId);const r=recognition;recognition=null;try{if(r)r.stop()}catch(e){}show();interimEl.textContent='';status('停止しました')};
-clearBtn.onclick=()=>{if(confirm('文字起こしした本文をすべて消去しますか？')){finalEl.value='';interimEl.textContent='';status(running?'● 認識中… 本文を消去しました':'本文を消去しました',running?'running':'')}};
+clearBtn.onclick=()=>{if(confirm('文字起こしした本文をすべて消去しますか？')){finalEl.value='';lastFinalText='';interimEl.textContent='';status(running?'● 認識中… 本文を消去しました':'本文を消去しました',running?'running':'')}};
 saveBtn.onclick=()=>{const text=finalEl.value.trim();if(!text){status('保存する文字がありません。','error');return}const d=new Date(),p=n=>String(n).padStart(2,'0'),name=`文字起こし_${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}_${p(d.getHours())}-${p(d.getMinutes())}-${p(d.getSeconds())}.txt`;const blob=new Blob([text+'\n'],{type:'text/plain;charset=utf-8'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);status('TXTを保存しました')};
 langEl.onchange=()=>{if(running){sessionId++;try{if(recognition)recognition.abort()}catch(e){}startRecognition()}};
 finalEl.addEventListener('focus',()=>{if(running)status('● 認識中… 本文を編集できます','running')});
